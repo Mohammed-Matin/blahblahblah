@@ -1,7 +1,7 @@
-import React from 'react';
-import { ExternalLink, Tag, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ExternalLink, Tag, Clock, AlertCircle } from 'lucide-react';
 
-const NEWS_DATA = [
+const DUMMY_NEWS = [
   {
     id: 1,
     title: "DeepSeek Coder V2 Released: Open Source Intelligence",
@@ -41,6 +41,34 @@ const NEWS_DATA = [
 ];
 
 export default function NewsFeed() {
+  const [news, setNews] = useState(DUMMY_NEWS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/news');
+        if (!response.ok) throw new Error('API not available');
+        const data = await response.json();
+        setNews(data);
+        setError(false);
+      } catch (err) {
+        console.log("Using fallback dummy data for News");
+        setNews(DUMMY_NEWS);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  if (loading) {
+    return <div className="text-slate-400 animate-pulse">Loading updates...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
@@ -50,8 +78,18 @@ export default function NewsFeed() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-blue-900/20 border border-blue-900/50 p-4 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+          <div>
+            <h4 className="text-blue-500 font-medium">Real-time API Offline</h4>
+            <p className="text-slate-300 text-sm">Showing fallback static data. Check REQUIREMENTS.md to implement the backend API.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4">
-        {NEWS_DATA.map((item) => (
+        {news.map((item) => (
           <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all group">
             <div className="flex justify-between items-start gap-4">
               <div className="space-y-2 flex-1">

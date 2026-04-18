@@ -1,8 +1,9 @@
-import React from 'react';
-import { Server, Key, Shield, Zap, Box, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Server, Key, Shield, Zap, Box, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const API_PROVIDERS = [
+const DUMMY_PROVIDERS = [
   {
+    id: 1,
     name: "Groq",
     description: "Ultra-fast LPU inference for open models (Llama 3, Mixtral).",
     tier: "Generous Free Tier",
@@ -11,6 +12,7 @@ const API_PROVIDERS = [
     color: "orange"
   },
   {
+    id: 2,
     name: "Together AI",
     description: "Broad ecosystem of open-source models via single API.",
     tier: "$5 Free Credit",
@@ -19,6 +21,7 @@ const API_PROVIDERS = [
     color: "blue"
   },
   {
+    id: 3,
     name: "Google Gemini",
     description: "Gemini 1.5 Flash and Pro models via Google AI Studio.",
     tier: "Free Tier Available",
@@ -27,6 +30,7 @@ const API_PROVIDERS = [
     color: "emerald"
   },
   {
+    id: 4,
     name: "Hugging Face Inference",
     description: "Serverless inference API for 100k+ models.",
     tier: "Free Tier",
@@ -37,6 +41,34 @@ const API_PROVIDERS = [
 ];
 
 export default function ModelDirectory() {
+  const [providers, setProviders] = useState(DUMMY_PROVIDERS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/models');
+        if (!response.ok) throw new Error('API not available');
+        const data = await response.json();
+        setProviders(data);
+        setError(false);
+      } catch (err) {
+        console.log("Using fallback dummy data for Models");
+        setProviders(DUMMY_PROVIDERS);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModels();
+  }, []);
+
+  if (loading) {
+    return <div className="text-slate-400 animate-pulse">Loading APIs & Models...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -44,9 +76,19 @@ export default function ModelDirectory() {
         <p className="text-slate-400">Build without breaking the bank. Top free tiers for developers.</p>
       </div>
 
+      {error && (
+        <div className="bg-purple-900/20 border border-purple-900/50 p-4 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-purple-500 mt-0.5" />
+          <div>
+            <h4 className="text-purple-500 font-medium">Real-time API Offline</h4>
+            <p className="text-slate-300 text-sm">Showing fallback static data. Check REQUIREMENTS.md to implement the backend API.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {API_PROVIDERS.map((provider, idx) => (
-          <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all">
+        {providers.map((provider) => (
+          <div key={provider.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg bg-blue-500/10 text-blue-500`}>

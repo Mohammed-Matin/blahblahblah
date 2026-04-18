@@ -1,60 +1,80 @@
-import React from 'react';
-import { Terminal, Code, Layers, GitBranch, Cpu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Terminal, Code, Layers, GitBranch, DatabaseIcon, AlertCircle } from 'lucide-react';
 
-const FRAMEWORKS = [
+const DUMMY_FRAMEWORKS = [
   {
+    id: 1,
     name: "LangChain",
-    icon: <Layers className="w-6 h-6" />,
+    icon: "Layers",
     desc: "The standard framework for developing applications powered by language models. Rich ecosystem of integrations.",
     language: "Python / JS",
     tags: ["Agents", "RAG", "Chains"]
   },
   {
+    id: 2,
     name: "LlamaIndex",
-    icon: <DatabaseIcon className="w-6 h-6" />,
+    icon: "DatabaseIcon",
     desc: "Data framework for connecting custom data sources to large language models. Best-in-class RAG capabilities.",
     language: "Python / TS",
     tags: ["RAG", "Data Connectors", "Vector Stores"]
   },
   {
+    id: 3,
     name: "Vercel AI SDK",
-    icon: <Code className="w-6 h-6" />,
+    icon: "Code",
     desc: "Library to build AI-powered streaming text and chat UIs in React, Svelte, Vue, and Solid.",
     language: "TypeScript",
     tags: ["UI", "Streaming", "React"]
   },
   {
+    id: 4,
     name: "DSPy",
-    icon: <GitBranch className="w-6 h-6" />,
+    icon: "GitBranch",
     desc: "Framework for algorithmically optimizing LM prompts and weights. Replaces manual prompt engineering.",
     language: "Python",
     tags: ["Optimization", "Research", "Compilers"]
   }
 ];
 
-// Reusable dummy icon since Database isn't imported from lucide-react above
-function DatabaseIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
-      <path d="M3 12A9 3 0 0 0 21 12" />
-    </svg>
-  );
-}
+const getIcon = (iconName) => {
+  switch(iconName) {
+    case "Layers": return <Layers className="w-6 h-6" />;
+    case "DatabaseIcon": return <DatabaseIcon className="w-6 h-6" />;
+    case "Code": return <Code className="w-6 h-6" />;
+    case "GitBranch": return <GitBranch className="w-6 h-6" />;
+    default: return <Terminal className="w-6 h-6" />;
+  }
+};
 
 export default function Frameworks() {
+  const [frameworks, setFrameworks] = useState(DUMMY_FRAMEWORKS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchFrameworks = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/frameworks');
+        if (!response.ok) throw new Error('API not available');
+        const data = await response.json();
+        setFrameworks(data);
+        setError(false);
+      } catch (err) {
+        console.log("Using fallback dummy data for Frameworks");
+        setFrameworks(DUMMY_FRAMEWORKS);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFrameworks();
+  }, []);
+
+  if (loading) {
+    return <div className="text-slate-400 animate-pulse">Loading frameworks...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -62,11 +82,21 @@ export default function Frameworks() {
         <p className="text-slate-400">Tools to wire up models, data, and interfaces.</p>
       </div>
 
+      {error && (
+        <div className="bg-emerald-900/20 border border-emerald-900/50 p-4 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+          <div>
+            <h4 className="text-emerald-500 font-medium">Real-time API Offline</h4>
+            <p className="text-slate-300 text-sm">Showing fallback static data. Check REQUIREMENTS.md to implement the backend API.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4">
-        {FRAMEWORKS.map((fw, idx) => (
-          <div key={idx} className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row gap-5 hover:border-slate-700 transition-all">
+        {frameworks.map((fw) => (
+          <div key={fw.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row gap-5 hover:border-slate-700 transition-all">
             <div className="p-3 bg-slate-800 rounded-lg h-fit text-slate-300 w-fit">
-              {fw.icon}
+              {getIcon(fw.icon)}
             </div>
 
             <div className="flex-1">
