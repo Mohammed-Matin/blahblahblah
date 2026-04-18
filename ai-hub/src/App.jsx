@@ -1,11 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Layout, Search, BookOpen, Cpu, Terminal, Zap, Globe, MessageSquare } from 'lucide-react';
+import Lenis from 'lenis';
 import NewsFeed from './components/NewsFeed';
 import ModelDirectory from './components/ModelDirectory';
 import Frameworks from './components/Frameworks';
 
 function App() {
   const [activeTab, setActiveTab] = useState('news');
+  const scrollContainerRef = useRef(null);
+
+  useEffect(() => {
+    const wrapper = scrollContainerRef.current;
+
+    if (!wrapper) {
+      return undefined;
+    }
+
+    const lenis = new Lenis({
+      wrapper,
+      content: wrapper.firstElementChild ?? wrapper,
+      duration: 1.1,
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.2,
+    });
+
+    let rafId = 0;
+
+    const raf = (time) => {
+      lenis.raf(time);
+      rafId = window.requestAnimationFrame(raf);
+    };
+
+    rafId = window.requestAnimationFrame(raf);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex font-mono">
@@ -75,7 +108,7 @@ function App() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
             {activeTab === 'news' && <NewsFeed />}
             {activeTab === 'models' && <ModelDirectory />}
